@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>ORASM - OpenRA Server Manager</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+
+        <style>
+            body { background: #fff; color: #444; margin: 0; font-family: sans-serif; padding: 25px; }
+            table { border-spacing: 0; box-shadow: 0 0 10px 0 #ccc ; margin: auto; }
+            thead th { border-bottom: 1px solid #eee; }
+            tbody tr:nth-child(2n) { background: #eee; }
+            tbody tr:hover { background: #444; color: #eee }
+            td, th { padding: 5px 10px; }
+            td.off:first-child { color: #f88; }
+            tfoot td { border-top: 1px solid #eee; }
+            tbody button { width: 50%; }
+            input, select, tfoot button { width: 100%; }
+            button[disabled] { opacity: 0.5; }
+        </style>
+
+        <script>
+            var query = function (handler, data, callback) {
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        callback(JSON.parse(xhr.responseText));
+                    }
+                };
+
+                xhr.open('POST', 'api/' + handler + '.php');
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.send(data == null ? null : "payload=" + encodeURIComponent(JSON.stringify(data)));
+            };
+
+            window.addEventListener('load', function () {
+                query('listservers', null, function (result) {
+                    result.forEach(function (server) {
+                        var row = document.createElement('tr');
+                        document.querySelector('tbody').appendChild(row);
+
+                        var portColumn = document.createElement('td');
+                        portColumn.innerText = server.Port;
+                        if (!server.Running) portColumn.classList.add('off');
+                        row.appendChild(portColumn);
+
+                        var nameColumn = document.createElement('td');
+                        nameColumn.innerText = server.Name;
+                        row.appendChild(nameColumn);
+
+                        var repositoryColumn = document.createElement('td');
+                        repositoryColumn.innerText = server.Repository;
+                        row.appendChild(repositoryColumn);
+
+                        var releaseColumn = document.createElement('td');
+                        releaseColumn.innerText = server.Release;
+                        row.appendChild(releaseColumn);
+
+                        var actionsColumn = document.createElement('td');
+                        row.appendChild(actionsColumn);
+
+                        var deleteButton = document.createElement('button');
+                        deleteButton.innerText = 'delete';
+                        actionsColumn.appendChild(deleteButton);
+
+                        if (server.Running) {
+                            deleteButton.disabled = true;
+                        } else {
+                            deleteButton.addEventListener('click', function () {
+                                if (!confirm("Are you sure?"))
+                                {
+                                    return;
+                                }
+
+                                query('deleteserver', {port: server.Port}, function (result) {
+                                    if (result.hasOwnProperty('error')) {
+                                        alert(result.error);
+                                        return;
+                                    }
+
+                                    document.location.reload();
+                                });
+                            });
+                        }
+
+                        var statusButton = document.createElement('button');
+                        statusButton.innerText = server.Running ? 'stop' : 'start';
+                        actionsColumn.appendChild(statusButton);
+
+                        var handler = server.Running ? 'stopserver' : 'startserver';
+                        statusButton.addEventListener('click', function () {
+                            query(handler, {port: server.Port}, function (result) {
+                                if (result.hasOwnProperty('error')) {
+                                    alert(result.error);
+                                    return;
+                                }
+
+                                document.location.reload();
+                            });
+                        });
+                    });
+                });
+
+                document.querySelector('[data-bind="fetch"]').addEventListener('change', function () {
+                    if (this.value === '')
+                        return;
+
+                    query('listreleases', {'repository': this.value}, function (result) {
+                        if (result.hasOwnProperty('error')) {
+                            alert(result.error);
+                            return;
+                        }
+
+                        var select = document.querySelector('select');
+
+                        while (select.hasChildNodes()) {
+                            select.removeChild(select.firstChild);
+                        }
+
+                        result.releases.forEach(function (release) {
+                            var option = document.createElement('option');
+                            option.innerText = release;
+                            select.appendChild(option);
+                        })
+                    });
+                });
+
+                document.querySelector('[data-bind="add"]').addEventListener('click', function () {
+                    query('createserver', {
+                        'port': document.querySelector('[name="port"]').value,
+                        'name': document.querySelector('[name="name"]').value,
+                        'repository': document.querySelector('[data-bind="fetch"]').value,
+                        'release': document.querySelector('select').value
+                    }, function (result) {
+                        if (result.hasOwnProperty('error')) {
+                            alert(result.error);
+                            return;
+                        }
+
+                        document.location.reload();
+                    });
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <table>
+            <thead>
+                <tr>
+                    <th>Port</th>
+                    <th>Name</th>
+                    <th>Repository</th>
+                    <th>Release</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td><input name="port" placeholder="Port" type="number"/></td>
+                    <td><input name="name" placeholder="EU Official X"/></td>
+                    <td><input placeholder="namespace/repository" data-bind="fetch"/></td>
+                    <td><select><option>Enter Repository first</option></select></td>
+                    <td><button data-bind="add">Add</button></td>
+                </tr>
+            </tfoot>
+        </table>
+    </body>
+</html>
