@@ -2,11 +2,11 @@
 
 $payload = json_decode($_POST['payload'], true);
 
-if (strpos($payload['repository'], '/') === -1) {
+if (strpos($payload['Repository'], '/') === -1) {
     echo json_encode(['error' => 'invalid repository']);
 } else {
     $releases = json_decode(file_get_contents(
-        'https://api.github.com/repos/' . $payload['repository'] . '/releases',
+        'https://api.github.com/repos/' . $payload['Repository'] . '/releases',
         false,
         stream_context_create(['http' => ['method' => 'GET', 'header' => ['User-Agent: ORASM - OpenRA Server Manager']]])
     ), true);
@@ -19,7 +19,7 @@ if (strpos($payload['repository'], '/') === -1) {
         foreach ($releases as $release) {
             foreach ($release['assets'] as $asset) {
                 if (substr($asset['name'], -9) === '.AppImage') {
-                    $availableReleases[] = $release['tag_name'];
+                    $availableReleases[] = ['Release' => $release['id'], 'Asset' => $asset['id'], 'Label' => $release['name'] . ' / ' .  $asset['name']];
                 }
             }
         }

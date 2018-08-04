@@ -72,7 +72,7 @@
                                     return;
                                 }
 
-                                query('deleteserver', {port: server.Port}, function (result) {
+                                query('deleteserver', {'Port': server.Port}, function (result) {
                                     if (result.hasOwnProperty('error')) {
                                         alert(result.error);
                                         return;
@@ -89,7 +89,7 @@
 
                         var handler = server.Running ? 'stopserver' : 'startserver';
                         statusButton.addEventListener('click', function () {
-                            query(handler, {port: server.Port}, function (result) {
+                            query(handler, {'Port': server.Port}, function (result) {
                                 if (result.hasOwnProperty('error')) {
                                     alert(result.error);
                                     return;
@@ -105,7 +105,7 @@
                     if (this.value === '')
                         return;
 
-                    query('listreleases', {'repository': this.value}, function (result) {
+                    query('listreleases', {'Repository': this.value}, function (result) {
                         if (result.hasOwnProperty('error')) {
                             alert(result.error);
                             return;
@@ -119,7 +119,8 @@
 
                         result.releases.forEach(function (release) {
                             var option = document.createElement('option');
-                            option.innerText = release;
+                            option.value = release.Release + ',' + release.Asset;
+                            option.innerText = release.Label;
                             select.appendChild(option);
                         })
                     });
@@ -127,10 +128,11 @@
 
                 document.querySelector('[data-bind="add"]').addEventListener('click', function () {
                     query('createserver', {
-                        'port': document.querySelector('[name="port"]').value,
-                        'name': document.querySelector('[name="name"]').value,
-                        'repository': document.querySelector('[data-bind="fetch"]').value,
-                        'release': document.querySelector('select').value
+                        'Port': document.querySelector('[name="port"]').value,
+                        'Name': document.querySelector('[name="name"]').value,
+                        'Repository': document.querySelector('[data-bind="fetch"]').value,
+                        'Asset': document.querySelector('select').value,
+                        'Release': document.querySelector('select').options[document.querySelector('select').selectedIndex].text
                     }, function (result) {
                         if (result.hasOwnProperty('error')) {
                             alert(result.error);

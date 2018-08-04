@@ -1,7 +1,7 @@
 <?php
 
 $payload = json_decode($_POST['payload'], true);
-$port = intval($payload['port']);
+$port = intval($payload['Port']);
 
 $running = trim(shell_exec('screen -list | grep "' . $port . '" && echo "true" || echo "false"'));
 

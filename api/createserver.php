@@ -1,8 +1,8 @@
 <?php
 
 $payload = json_decode($_POST['payload'], true);
-$port = intval($payload['port']);
-$name = trim($payload['name']);
+$port = intval($payload['Port']);
+$name = trim($payload['Name']);
 $servers = json_decode(file_get_contents('../config.json'), true);
 
 $exists = false;
@@ -18,11 +18,13 @@ if ($port <= 0 || $port > 0xffff) {
     echo json_encode(['error' => 'port in use']);
 } else if ($name === "") {
     echo json_encode(['error' => 'invalid server name']);
-} else if (strpos($payload['repository'], '/') === -1) {
+} else if (strpos($payload['Repository'], '/') === -1) {
     echo json_encode(['error' => 'invalid repository']);
 } else {
+    $ids = array_map('intval', explode(',', $payload['Asset']));
+
     $releases = json_decode(file_get_contents(
-        'https://api.github.com/repos/' . $payload['repository'] . '/releases',
+        'https://api.github.com/repos/' . $payload['Repository'] . '/releases',
         false,
         stream_context_create(['http' => ['method' => 'GET', 'header' => ['User-Agent: ORASM - OpenRA Server Manager']]])
     ), true);
@@ -33,9 +35,9 @@ if ($port <= 0 || $port > 0xffff) {
         $appImageLink = null;
 
         foreach ($releases as $release) {
-            if ($release['tag_name'] === $payload['release']) {
+            if ($release['id'] === $ids[0]) {
                 foreach ($release['assets'] as $asset) {
-                    if (substr($asset['name'], -9) === '.AppImage') {
+                    if ($asset['id'] === $ids[1]) {
                         $appImageLink = $asset['browser_download_url'];
                     }
                 }
@@ -62,8 +64,8 @@ if ($port <= 0 || $port > 0xffff) {
             $servers[] = [
                 'Port' => $port,
                 'Name' => $name,
-                'Repository' => $payload['repository'],
-                'Release' => $payload['release']
+                'Repository' => $payload['Repository'],
+                'Release' => $payload['Release']
             ];
 
             file_put_contents('../config.json', json_encode($servers));
