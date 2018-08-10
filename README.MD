@@ -1,22 +1,22 @@
 # ORASM - OpenRA Server Manager
 
 A simple web based interface to create/delete, start/stop and Monitor OpenRA servers.
-It will auto download AppImage releases from github.
+Creating new servers will automatically download the AppImage releases from github.
+
+I quickly wrote this "software" to save me some time managing my servers via console.
+It does not use any fancy framework, library or complex setup and is meant as a minimalistic tool.
+Feel free to contribute!
 
 ## Important notice
 
 This tool does not have any authentication yet, nor does it support multiple users.
 **Add some kind of authentication like .htaccess / .htpasswd in front!**
-It also does not check hardware if enough performance is available for additional server.
+Also it does not check whether enough memory is available for additional servers.
 
 ## Requirements
 
 - Linux
-- "screen" installed (required for starting, stopping, monitoring)
-- "fuse" availabe (AppImage needs this)
-- PHP
-
-## Notice
-
-I quickly wrote this "software" to save me some time managing my servers via console.
-Feel free to contribute!
+- ```fuse``` availabe (AppImage requirement)
+- ```screen``` installed (required for starting, stopping, monitoring)
+- PHP for the API to actually work
+- Write access to the ```servers``` folder and the ```config.json``` file
